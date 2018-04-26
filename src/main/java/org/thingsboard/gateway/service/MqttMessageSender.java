@@ -105,8 +105,12 @@ public class MqttMessageSender implements Runnable {
     }
 
     private Future<Void> publishMqttMessage(MqttPersistentMessage message) {
-        return tbClient.publish(message.getTopic(), Unpooled.wrappedBuffer(message.getPayload()), MqttQoS.AT_LEAST_ONCE).addListener(
-                future -> incomingQueue.put(new MessageFuturePair(future, message))
+        return tbClient.publish(message.getTopic(), Unpooled.wrappedBuffer(message.getPayload()), MqttQoS.AT_MOST_ONCE).addListener(
+                future -> {
+                    incomingQueue.put(new MessageFuturePair(future, message));
+                    log.info("GW message sent: {} {} {}",
+                            message.getId(), message.getTopic(), message.getDeviceId());
+                }
         );
     }
 
